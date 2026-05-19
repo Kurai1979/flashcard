@@ -32,7 +32,7 @@ make sqlc-check      # generate + run tests
 
 This is a PostgreSQL-backed Go service using goose for migrations and sqlc for type-safe query generation.
 
-**Schema source of truth**: `db/migrations/` — goose migration files are also what sqlc parses to derive the current schema. There is no separate schema directory.
+**Schema source of truth**: `db/migrations/` — goose migration files are what sqlc parses to derive the current schema. Make schema changes by adding/editing migrations; there is no separate `db/schema/` source of truth in this repository, and any documentation that mentions `db/schema/` should be treated as outdated.
 
 **Query authoring flow**: write a named SQL query in `db/query/`, run `make sqlc-generate`, then use the generated Go functions from `internal/db/`. The generated package is named `db` with `pgx/v5` as the SQL driver and includes a `Querier` interface (`emit_interface: true`) suitable for mocking in tests.
 
