@@ -7,7 +7,7 @@ CREATE TABLE users
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email         TEXT UNIQUE NOT NULL,
     password_hash TEXT        NOT NULL,
-    is_active     BOOLEAN     NOT NULL DEFAULT TRUE,
+    is_active     BOOLEAN     NOT NULL DEFAULT FALSE,
     is_verified   BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
