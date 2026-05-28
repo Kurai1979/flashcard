@@ -5,9 +5,9 @@ import (
 )
 
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
-	if _, err := h.Queries.GetUserByEmail(r.Context(), "healthcheck@example.invalid"); err != nil {
-		h.Logger.DebugContext(r.Context(), "health check db ping returned error (expected for missing user)", "err", err)
-		h.serverError(w, r, "server down", err)
+	if _, err := h.Queries.HealthCheck(r.Context()); err != nil {
+		h.Logger.ErrorContext(r.Context(), "health check failed", "err", err)
+		http.Error(w, "service unavailable", http.StatusServiceUnavailable)
 		return
 	}
 
