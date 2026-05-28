@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/mail"
 	"strings"
 
 	"github.com/Kurai1979/flashcard/internal/auth"
@@ -26,19 +28,28 @@ type createUserRequest struct {
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req createUserRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if req.Email == "" || req.Password == "" {
-		http.Error(w, "email and password are required", http.StatusBadRequest)
+	if err := validatePassword(req.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	normalizedEmail := strings.ToLower(strings.TrimSpace(req.Email))
+	e, err := mail.ParseAddress(req.Email)
+	if err != nil {
+		http.Error(w, "email is not valid", http.StatusBadRequest)
+		return
+	}
 
-	_, err := h.Queries.GetUserByEmail(r.Context(), normalizedEmail)
+	normalizedEmail := strings.ToLower(strings.TrimSpace(e.Address))
+
+	_, err = h.Queries.GetUserByEmail(r.Context(), normalizedEmail)
 
 	switch {
 	case err == nil:
@@ -85,5 +96,18 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Info("created user", "email", createdUser.Email)
+	h.Logger.InfoContext(r.Context(), "created user", "email", createdUser.Email)
+}
+
+func validatePassword(password string) error {
+	const minLength = 12
+
+	if len(password) < minLength {
+		return fmt.Errorf("password length must be at least %d", minLength)
+	}
+	if len(password) > auth.MaxPasswordLength {
+		return fmt.Errorf("password must not exceed %d", auth.MaxPasswordLength)
+	}
+
+	return nil
 }

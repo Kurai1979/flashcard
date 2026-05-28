@@ -27,9 +27,14 @@ var DefaultParams = Argon2Params{
 	Parallelism: 4,
 }
 
+const MaxPasswordLength int = 64
+
 func AuthorizeUser(storedHash, password string) (bool, error) {
 	if password == "" {
 		return false, errors.New("password must not be empty")
+	}
+	if len(password) > MaxPasswordLength {
+		return false, errors.New("password exceeds maximum length")
 	}
 
 	params, salt, hash, err := parseHash(storedHash)
@@ -86,6 +91,9 @@ func parseHash(encodedHash string) (*Argon2Params, []byte, []byte, error) {
 func GenerateHash(password string, p Argon2Params) (string, error) {
 	if password == "" {
 		return "", errors.New("password must not be empty")
+	}
+	if len(password) > MaxPasswordLength {
+		return "", errors.New("password exceeds maximum length")
 	}
 	if p.SaltLength == 0 || p.KeyLength == 0 || p.Iterations == 0 || p.MemorySize == 0 || p.Parallelism == 0 {
 		return "", errors.New("invalid Argon2 parameters: all fields must be non-zero")
