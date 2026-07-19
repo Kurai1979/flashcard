@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,57 +9,58 @@ import (
 
 	"github.com/Kurai1979/flashcard/internal/auth"
 	"github.com/Kurai1979/flashcard/internal/db"
-	"github.com/google/uuid"
+	"github.com/Kurai1979/flashcard/internal/templates"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type createUserResponse struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-}
-
-type createUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+func (h *Handler) NewUser(w http.ResponseWriter, r *http.Request) {
+	h.render(w, r, http.StatusOK, templates.CreateUserPage())
 }
 
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var req createUserRequest
-
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	if err := validatePassword(req.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	email := r.PostFormValue("email")
+	password := r.PostFormValue("password")
+
+	// htmx only swaps content on 2xx responses, so validation errors return 200
+	// with the re-rendered form rather than a 4xx the client would ignore.
+	formError := func(msg string) {
+		h.render(w, r, http.StatusOK, templates.CreateUser(templates.CreateUserForm{
+			Email: email,
+			Error: msg,
+		}))
+	}
+
+	if err := validatePassword(password); err != nil {
+		formError(err.Error())
 		return
 	}
 
-	e, err := mail.ParseAddress(req.Email)
+	e, err := mail.ParseAddress(email)
 	if err != nil {
-		http.Error(w, "email is not valid", http.StatusBadRequest)
+		formError("email is not valid")
 		return
 	}
 
 	normalizedEmail := strings.ToLower(strings.TrimSpace(e.Address))
 
 	_, err = h.Queries.GetUserByEmail(r.Context(), normalizedEmail)
-
 	switch {
 	case err == nil:
-		http.Error(w, "email already registered", http.StatusConflict)
+		formError("email already registered")
 		return
 	case !errors.Is(err, pgx.ErrNoRows):
 		h.serverError(w, r, "lookup user", err)
 		return
 	}
 
-	hash, err := auth.GenerateHash(req.Password, auth.DefaultParams)
+	hash, err := auth.GenerateHash(password, auth.DefaultParams)
 	if err != nil {
 		h.serverError(w, r, "hash password", err)
 		return
@@ -76,27 +76,15 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	createdUser, err := h.Queries.CreateUser(r.Context(), newUser)
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
-			http.Error(w, "email already registered", http.StatusConflict)
+			formError("email already registered")
 			return
 		}
 		h.serverError(w, r, "insert user", err)
 		return
 	}
 
-	response := createUserResponse{
-		ID:    uuid.UUID(createdUser.ID.Bytes).String(),
-		Email: createdUser.Email,
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		h.Logger.ErrorContext(r.Context(), "encode response", "err", err)
-		return
-	}
-
 	h.Logger.InfoContext(r.Context(), "created user", "email", createdUser.Email)
+	h.render(w, r, http.StatusCreated, templates.CreateUserSuccess(createdUser.Email))
 }
 
 func validatePassword(password string) error {

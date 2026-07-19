@@ -27,6 +27,7 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		logger.Error("error loading .env file", "error", err)
+		os.Exit(1)
 	}
 
 	port := portFromEnv(8080, logger)
@@ -50,7 +51,10 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Timeout(60 * time.Second))
+	fs := http.FileServer(http.Dir("static"))
+	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	r.Get("/healthz", h.Health)
+	r.Get("/users/new", h.NewUser)
 	r.Post("/users", h.CreateUser)
 
 	srv := &http.Server{
