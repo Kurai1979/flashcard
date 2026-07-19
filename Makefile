@@ -5,7 +5,10 @@ MIGRATIONS_DIR ?= db/migrations
 DB_DRIVER ?= postgres
 DB_DSN ?= $(DATABASE_URL)
 
-.PHONY: migrate-create migrate-up migrate-down migrate-status sqlc-generate sqlc-vet sqlc-check docker-up docker-down
+TAILWIND_INPUT ?= assets/css/app.css
+TAILWIND_OUTPUT ?= static/css/app.css
+
+.PHONY: migrate-create migrate-up migrate-down migrate-status sqlc-generate sqlc-vet sqlc-check docker-up docker-down templ-generate templ-watch tailwind tailwind-watch
 
 docker-up:
 	docker compose up -d
@@ -35,3 +38,15 @@ sqlc-vet:
 sqlc-check:
 	sqlc generate
 	go test ./...
+
+templ-generate:
+	templ generate
+
+templ-watch:
+	templ generate --watch
+
+tailwind:
+	tailwindcss -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT) --minify
+
+tailwind-watch:
+	tailwindcss -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT) --watch
