@@ -1,0 +1,37 @@
+package templates
+
+type LoginForm struct {
+	Email string
+	Error string
+}
+
+templ LoginPage() {
+	@AuthCard("Log in") {
+		@Login(LoginForm{})
+		<p class="mt-4 text-sm text-gray-600">
+			No account?
+			<a class="font-medium text-blue-600 hover:underline" href="/users/new">Create one</a>
+		</p>
+	}
+}
+
+// Login renders the credentials form. On success the handler replies with an
+// HX-Redirect header (not a swap), so this fragment is only re-rendered to show
+// an error. The wrapping id must match hx-target for the error swap to land.
+templ Login(form LoginForm) {
+	<form id="login" class="flex flex-col gap-4" hx-post="/login" hx-target="#login" hx-swap="outerHTML">
+		@csrfField()
+		if form.Error != "" {
+			<p role="alert" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{ form.Error }</p>
+		}
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+			Email
+			<input class="input" type="email" name="email" value={ form.Email } required/>
+		</label>
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+			Password
+			<input class="input" type="password" name="password" required/>
+		</label>
+		<button class="btn-primary mt-2 w-full" type="submit">Log in</button>
+	</form>
+}

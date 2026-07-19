@@ -1,0 +1,16 @@
+package templates
+
+templ DashboardPage(email string) {
+	@Layout("Dashboard") {
+		<main class="mx-auto max-w-2xl p-8">
+			<div class="flex items-center justify-between">
+				<h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+				<form hx-post="/logout" hx-swap="none">
+					@csrfField()
+					<button class="btn-primary" type="submit">Log out</button>
+				</form>
+			</div>
+			<p class="mt-4 text-gray-700">Signed in as { email }.</p>
+		</main>
+	}
+}

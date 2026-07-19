@@ -16,3 +16,17 @@ templ Layout(title string) {
 		</body>
 	</html>
 }
+
+// AuthCard is the shared shell for the login and registration pages: a centered
+// card with a heading. Both pages render their form (and any footer links) as
+// children so the card markup lives in one place.
+templ AuthCard(title string) {
+	@Layout(title) {
+		<main class="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+			<div class="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+				<h1 class="mb-6 text-2xl font-semibold text-gray-900">{ title }</h1>
+				{ children... }
+			</div>
+		</main>
+	}
+}

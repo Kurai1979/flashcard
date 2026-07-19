@@ -10,6 +10,7 @@ import (
 	"github.com/Kurai1979/flashcard/internal/auth"
 	"github.com/Kurai1979/flashcard/internal/db"
 	"github.com/Kurai1979/flashcard/internal/templates"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -83,8 +84,16 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Log the new user straight in, mirroring the login flow: rotate the session
+	// token, store their id, and hand off to the dashboard.
+	if err := h.Sessions.RenewToken(r.Context()); err != nil {
+		h.serverError(w, r, "renew session", err)
+		return
+	}
+	h.Sessions.Put(r.Context(), sessionUserIDKey, uuid.UUID(createdUser.ID.Bytes).String())
+
 	h.Logger.InfoContext(r.Context(), "created user", "email", createdUser.Email)
-	h.render(w, r, http.StatusCreated, templates.CreateUserSuccess(createdUser.Email))
+	h.redirectAfterAuth(w, r, "/dashboard")
 }
 
 func validatePassword(password string) error {

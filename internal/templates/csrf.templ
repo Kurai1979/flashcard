@@ -1,0 +1,7 @@
+package templates
+
+// csrfField renders the hidden CSRF token input. The field name matches nosurf's
+// default (csrf_token). Include it in every form that POSTs.
+templ csrfField() {
+	<input type="hidden" name="csrf_token" value={ csrfToken(ctx) }/>
+}
