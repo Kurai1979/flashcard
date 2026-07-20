@@ -14,8 +14,8 @@ import (
 
 	"github.com/Kurai1979/flashcard/internal/db"
 	"github.com/Kurai1979/flashcard/internal/handlers"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/alexedwards/scs/pgxstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -46,20 +46,23 @@ func main() {
 
 	defer pool.Close()
 
+	// Serve cookies with the Secure attribute whenever the site is behind HTTPS.
+	// Keep it false for local plain-HTTP development.
+	secureCookies := boolFromEnv("SECURE_COOKIES", false, logger)
+
+	sessionManager := scs.New()
+	sessionManager.Store = pgxstore.New(pool)
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.HttpOnly = true
+	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+	sessionManager.Cookie.Secure = secureCookies
+
 	queries := db.New(pool)
-	h := handlers.New(queries, logger)
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Timeout(60 * time.Second))
-	fs := http.FileServer(http.Dir("static"))
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
-	r.Get("/healthz", h.Health)
-	r.Get("/users/new", h.NewUser)
-	r.Post("/users", h.CreateUser)
+	h := handlers.New(queries, logger, sessionManager)
 
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      r,
+		Handler:      h.Routes(sessionManager, secureCookies),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -87,6 +90,19 @@ func main() {
 		os.Exit(1)
 	}
 	logger.Info("server stopped")
+}
+
+func boolFromEnv(key string, def bool, logger *slog.Logger) bool {
+	s := os.Getenv(key)
+	if s == "" {
+		return def
+	}
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		logger.Error("invalid boolean env var, using default", "key", key, "value", s, "default", def)
+		return def
+	}
+	return v
 }
 
 func portFromEnv(def int, logger *slog.Logger) int {

@@ -6,17 +6,20 @@ import (
 
 	"github.com/Kurai1979/flashcard/internal/db"
 	"github.com/a-h/templ"
+	"github.com/alexedwards/scs/v2"
 )
 
 type Handler struct {
-	Queries db.Querier
-	Logger  *slog.Logger
+	Queries  db.Querier
+	Logger   *slog.Logger
+	Sessions *scs.SessionManager
 }
 
-func New(queries db.Querier, logger *slog.Logger) *Handler {
+func New(queries db.Querier, logger *slog.Logger, sessions *scs.SessionManager) *Handler {
 	return &Handler{
-		Queries: queries,
-		Logger:  logger,
+		Queries:  queries,
+		Logger:   logger,
+		Sessions: sessions,
 	}
 }
 
