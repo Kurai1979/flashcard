@@ -8,6 +8,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Deck struct {
+	ID          pgtype.UUID        `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DeckFlashcard struct {
+	DeckID      pgtype.UUID        `json:"deck_id"`
+	FlashcardID pgtype.UUID        `json:"flashcard_id"`
+	Position    pgtype.Int4        `json:"position"`
+	AddedAt     pgtype.Timestamptz `json:"added_at"`
+}
+
+type Flashcard struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Front     string             `json:"front"`
+	Back      string             `json:"back"`
+	Example   pgtype.Text        `json:"example"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type FlashcardReview struct {
+	ID          pgtype.UUID `json:"id"`
+	FlashcardID pgtype.UUID `json:"flashcard_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	// 1=again, 2=hard, 3=good, 4=easy
+	Rating     int16              `json:"rating"`
+	DurationMs pgtype.Int4        `json:"duration_ms"`
+	ReviewedAt pgtype.Timestamptz `json:"reviewed_at"`
+}
+
 type Session struct {
 	Token  string             `json:"token"`
 	Data   []byte             `json:"data"`

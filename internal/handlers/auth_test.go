@@ -46,6 +46,41 @@ func (s *stubQuerier) HealthCheck(context.Context) (int32, error) {
 	panic("HealthCheck not implemented")
 }
 
+func (s *stubQuerier) CreateDeck(context.Context, db.CreateDeckParams) (db.Deck, error) {
+	panic("CreateDeck not implemented")
+}
+func (s *stubQuerier) GetDeck(context.Context, db.GetDeckParams) (db.Deck, error) {
+	panic("GetDeck not implemented")
+}
+func (s *stubQuerier) ListDecks(context.Context, pgtype.UUID) ([]db.Deck, error) {
+	panic("ListDecks not implemented")
+}
+func (s *stubQuerier) UpdateDeck(context.Context, db.UpdateDeckParams) (db.Deck, error) {
+	panic("UpdateDeck not implemented")
+}
+func (s *stubQuerier) DeleteDeck(context.Context, db.DeleteDeckParams) (int64, error) {
+	panic("DeleteDeck not implemented")
+}
+func (s *stubQuerier) AddFlashcardToDeck(context.Context, db.AddFlashcardToDeckParams) (int64, error) {
+	panic("AddFlashcardToDeck not implemented")
+}
+func (s *stubQuerier) RemoveFlashcardFromDeck(context.Context, db.RemoveFlashcardFromDeckParams) (int64, error) {
+	panic("RemoveFlashcardFromDeck not implemented")
+}
+
+func (s *stubQuerier) CreateFlashcard(context.Context, db.CreateFlashcardParams) (db.Flashcard, error) {
+	panic("CreateFlashcard not implemented")
+}
+func (s *stubQuerier) UpdateFlashcard(context.Context, db.UpdateFlashcardParams) (db.Flashcard, error) {
+	panic("UpdateFlashcard not implemented")
+}
+func (s *stubQuerier) DeleteFlashcard(context.Context, db.DeleteFlashcardParams) (int64, error) {
+	panic("DeleteFlashcard not implemented")
+}
+func (s *stubQuerier) ListFlashcards(context.Context, db.ListFlashcardsParams) ([]db.ListFlashcardsRow, error) {
+	panic("ListFlashcards not implemented")
+}
+
 func newTestUser(t *testing.T, email, password string, active bool) db.User {
 	t.Helper()
 	hash, err := auth.GenerateHash(password, auth.DefaultParams)

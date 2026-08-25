@@ -1,0 +1,131 @@
+package templates
+
+import "github.com/Kurai1979/flashcard/internal/db"
+
+type Deckform struct {
+	ID          string
+	Name        string
+	Description string
+	Error       string
+	Notice      string
+}
+
+// action is the endpoint the form submits to: the collection for a new card,
+// the card's own URL for an edit.
+func (f Deckform) action() string {
+	if f.ID == "" {
+		return "/decks"
+	}
+	return "/decks/" + f.ID
+}
+
+func (f Deckform) submitLabel() string {
+	if f.ID == "" {
+		return "Create"
+	}
+	return "Save"
+}
+
+templ SaveDeck(form Deckform) {
+	<form id="deckForm" class="flex flex-col gap-4" hx-post={ form.action() } hx-target="this" hx-swap="outerHTML">
+		@csrfField()
+		if form.Error != "" {
+			<p role="alert" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{ form.Error }</p>
+		}
+		if form.Notice != "" {
+			<p role="status" class="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">{ form.Notice }</p>
+		}
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+			Name
+			<input class="input" type="text" name="name" value={ form.Name } required/>
+		</label>
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+			Description
+			<input class="input" type="text" name="description" value={ form.Description }/>
+		</label>
+		<button class="btn-primary mt-2 w-full" type="submit">{ form.submitLabel() }</button>
+	</form>
+}
+
+// DecksPage is the deck/card authoring area. The card form it contains posts
+// to /flashcard on its own; decks is the caller's own deck list, newest first.
+templ DecksPage(email string, decks []db.Deck) {
+	@AppShell("Decks", email) {
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Decks</h1>
+		</div>
+		<section class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<h2 class="text-sm font-semibold text-gray-900 dark:text-white">New deck</h2>
+			<div id="create-deck" class="mt-4">
+				@SaveDeck(Deckform{})
+			</div>
+		</section>
+		<section class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<h2 class="text-sm font-semibold text-gray-900 dark:text-white">New card</h2>
+			<div id="create-card" class="mt-4">
+				// An empty form posts to /flashcard; the handler swaps a fresh one
+				// back in so the next card can be typed straight away.
+				@SaveFlashcard(FlashcardForm{})
+			</div>
+		</section>
+		<section class="mt-6">
+			<h2 class="text-sm font-semibold text-gray-900 dark:text-white">Your decks</h2>
+			@DeckList(decks)
+		</section>
+	}
+}
+
+// DeckList renders the whole list. A handler that creates a deck can render a
+// single DeckListItem and swap it in with hx-swap="beforeend" on #deck-list.
+templ DeckList(decks []db.Deck) {
+	<ul id="deck-list" class="mt-4 flex flex-col gap-2">
+		if len(decks) == 0 {
+			<li class="text-sm text-gray-500 dark:text-gray-400">No decks yet.</li>
+		}
+		for _, deck := range decks {
+			@DeckListItem(deck)
+		}
+	</ul>
+}
+
+templ DeckListItem(deck db.Deck) {
+	<li id={ deckRowID(deck) } class="flex items-start justify-between gap-4 rounded-md border border-gray-200 px-4 py-3 dark:border-gray-800">
+		<div class="min-w-0">
+			<p class="text-sm font-medium text-gray-900 dark:text-white">{ deck.Name }</p>
+			if deck.Description.Valid && deck.Description.String != "" {
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{ deck.Description.String }</p>
+			}
+		</div>
+		// The empty response body swaps over this row's <li>, so a deleted deck
+		// disappears without reloading the list.
+		<button
+			type="button"
+			hx-delete={ "/decks/" + deck.ID.String() }
+			hx-headers={ csrfHeaders(ctx) }
+			hx-target={ "#" + deckRowID(deck) }
+			hx-swap="outerHTML"
+			hx-confirm={ "Delete deck \"" + deck.Name + "\"?" }
+			title="Delete deck"
+			aria-label={ "Delete deck " + deck.Name }
+			class="shrink-0 rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+		>
+			@trashIcon()
+		</button>
+	</li>
+}
+
+// deckRowID is the DOM id of a deck's row, shared by the row and the hx-target
+// of its delete button.
+func deckRowID(deck db.Deck) string {
+	return "deck-" + deck.ID.String()
+}
+
+templ trashIcon() {
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+		<path d="M4 7h16"></path>
+		<path d="M10 11v6"></path>
+		<path d="M14 11v6"></path>
+		<path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"></path>
+		<path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+	</svg>
+}

@@ -13,3 +13,5 @@ bin/
 # ProxyAI / CodeGPT plugin (local AI edit checkpoints)
 .proxyai/
 
+# Claude Code worktrees (disposable checkouts; branches live in the object store)
+.claude/worktrees/

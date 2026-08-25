@@ -11,10 +11,26 @@ import (
 )
 
 type Querier interface {
+	AddFlashcardToDeck(ctx context.Context, arg AddFlashcardToDeckParams) (int64, error)
+	CreateDeck(ctx context.Context, arg CreateDeckParams) (Deck, error)
+	CreateFlashcard(ctx context.Context, arg CreateFlashcardParams) (Flashcard, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteDeck(ctx context.Context, arg DeleteDeckParams) (int64, error)
+	DeleteFlashcard(ctx context.Context, arg DeleteFlashcardParams) (int64, error)
+	GetDeck(ctx context.Context, arg GetDeckParams) (Deck, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id pgtype.UUID) (User, error)
 	HealthCheck(ctx context.Context) (int32, error)
+	ListDecks(ctx context.Context, userID pgtype.UUID) ([]Deck, error)
+	// Keyset pagination, newest first. Flashcard ids are uuidv7, whose leading bits
+	// are a timestamp, so ordering by id is chronological and the last id on a page
+	// is a stable cursor: unlike OFFSET it can't skip or repeat rows when cards are
+	// inserted mid-listing, and it never scans the rows it skips. Pass a NULL cursor
+	// for the first page.
+	ListFlashcards(ctx context.Context, arg ListFlashcardsParams) ([]ListFlashcardsRow, error)
+	RemoveFlashcardFromDeck(ctx context.Context, arg RemoveFlashcardFromDeckParams) (int64, error)
+	UpdateDeck(ctx context.Context, arg UpdateDeckParams) (Deck, error)
+	UpdateFlashcard(ctx context.Context, arg UpdateFlashcardParams) (Flashcard, error)
 	UpdateLastLogin(ctx context.Context, id pgtype.UUID) error
 }
 

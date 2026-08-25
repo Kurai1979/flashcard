@@ -46,6 +46,11 @@ func (h *Handler) Routes(sessionManager *scs.SessionManager, secureCookies bool)
 		r.Group(func(r chi.Router) {
 			r.Use(h.RequireAuth)
 			r.Get("/dashboard", h.Dashboard)
+			r.Get("/decks", h.GetDecks)
+			r.Post("/decks", h.AddDeck)
+			r.Delete("/decks/{id}", h.RemoveDeck)
+			r.Post("/flashcard", h.CreateFlashcard)
+			r.Post("/flashcard/{id}", h.UpdateFlashcard)
 		})
 	})
 

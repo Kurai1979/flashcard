@@ -1,0 +1,55 @@
+package templates
+
+// FlashcardForm backs both the create and the edit form. An empty ID means a
+// new card; a set one means the form edits that card.
+type FlashcardForm struct {
+	ID      string
+	Front   string
+	Back    string
+	Example string
+	Error   string
+	// Notice confirms a save. Without it a cleared create form is ambiguous:
+	// the fields look the same whether the card saved or nothing happened.
+	Notice string
+}
+
+// action is the endpoint the form submits to: the collection for a new card,
+// the card's own URL for an edit.
+func (f FlashcardForm) action() string {
+	if f.ID == "" {
+		return "/flashcard"
+	}
+	return "/flashcard/" + f.ID
+}
+
+func (f FlashcardForm) submitLabel() string {
+	if f.ID == "" {
+		return "Create"
+	}
+	return "Save"
+}
+
+templ SaveFlashcard(form FlashcardForm) {
+	<form id="flashcardForm" class="flex flex-col gap-4" hx-post={ form.action() } hx-target="this" hx-swap="outerHTML">
+		@csrfField()
+		if form.Error != "" {
+			<p role="alert" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{ form.Error }</p>
+		}
+		if form.Notice != "" {
+			<p role="status" class="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">{ form.Notice }</p>
+		}
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+			Front
+			<input class="input" type="text" name="front" value={ form.Front } required/>
+		</label>
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+			Back
+			<input class="input" type="text" name="back" value={ form.Back } required/>
+		</label>
+		<label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+			Example
+			<input class="input" type="text" name="example" value={ form.Example }/>
+		</label>
+		<button class="btn-primary mt-2 w-full" type="submit">{ form.submitLabel() }</button>
+	</form>
+}
