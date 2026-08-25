@@ -1,7 +1,16 @@
 package templates
 
+import "context"
+
 // csrfField renders the hidden CSRF token input. The field name matches nosurf's
 // default (csrf_token). Include it in every form that POSTs.
 templ csrfField() {
 	<input type="hidden" name="csrf_token" value={ csrfToken(ctx) }/>
+}
+
+// csrfHeaders is the hx-headers value for requests that carry no form body Go
+// will parse — DELETE, notably, since ParseForm only reads a body for POST, PUT
+// and PATCH. nosurf accepts the token in the X-CSRF-Token header instead.
+func csrfHeaders(ctx context.Context) string {
+	return `{"X-CSRF-Token": "` + csrfToken(ctx) + `"}`
 }

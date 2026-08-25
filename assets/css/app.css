@@ -3,6 +3,11 @@
 /* Tell Tailwind where to scan for class names (templ source files). */
 @source "../../internal/templates/**/*.templ";
 
+/* Drive dark: off a class on <html> instead of the OS setting, so the toggle in
+   static/js/theme.js can override the preference. That script still falls back
+   to prefers-color-scheme when the visitor hasn't chosen. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Self-hosted Inter (variable font, weights 100-900). */
 @font-face {
 	font-family: "Inter";
@@ -20,7 +25,11 @@
 	@apply block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900
 		shadow-sm placeholder:text-gray-400
 		focus:border-blue-600 focus:outline-2 focus:outline-offset-0 focus:outline-blue-600
-		disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
+		disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500
+		dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100
+		dark:placeholder:text-gray-500
+		dark:focus:border-blue-500 dark:focus:outline-blue-500
+		dark:disabled:bg-gray-900 dark:disabled:text-gray-500;
 }
 
 @utility btn-primary {

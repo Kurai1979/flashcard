@@ -50,7 +50,7 @@ func LoginPage() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-4 text-sm text-gray-600\">No account? <a class=\"font-medium text-blue-600 hover:underline\" href=\"/users/new\">Create one</a></p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <p class=\"mt-4 text-sm text-gray-600 dark:text-gray-400\">No account? <a class=\"font-medium text-blue-600 hover:underline dark:text-blue-400\" href=\"/users/new\">Create one</a></p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -97,14 +97,14 @@ func Login(form LoginForm) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if form.Error != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p role=\"alert\" class=\"rounded-md bg-red-50 px-3 py-2 text-sm text-red-700\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p role=\"alert\" class=\"rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(form.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/auth.templ`, Line: 25, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/auth.templ`, Line: 25, Col: 125}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -115,7 +115,7 @@ func Login(form LoginForm) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label class=\"flex flex-col gap-1.5 text-sm font-medium text-gray-700\">Email <input class=\"input\" type=\"email\" name=\"email\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label class=\"flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300\">Email <input class=\"input\" type=\"email\" name=\"email\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,7 +128,7 @@ func Login(form LoginForm) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" required></label> <label class=\"flex flex-col gap-1.5 text-sm font-medium text-gray-700\">Password <input class=\"input\" type=\"password\" name=\"password\" required></label> <button class=\"btn-primary mt-2 w-full\" type=\"submit\">Log in</button></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" required></label> <label class=\"flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300\">Password <input class=\"input\" type=\"password\" name=\"password\" required></label> <button class=\"btn-primary mt-2 w-full\" type=\"submit\">Log in</button></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

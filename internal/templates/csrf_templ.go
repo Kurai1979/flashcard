@@ -8,6 +8,8 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "context"
+
 // csrfField renders the hidden CSRF token input. The field name matches nosurf's
 // default (csrf_token). Include it in every form that POSTs.
 func csrfField() templ.Component {
@@ -38,7 +40,7 @@ func csrfField() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(csrfToken(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/csrf.templ`, Line: 6, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/csrf.templ`, Line: 8, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -50,6 +52,13 @@ func csrfField() templ.Component {
 		}
 		return nil
 	})
+}
+
+// csrfHeaders is the hx-headers value for requests that carry no form body Go
+// will parse — DELETE, notably, since ParseForm only reads a body for POST, PUT
+// and PATCH. nosurf accepts the token in the X-CSRF-Token header instead.
+func csrfHeaders(ctx context.Context) string {
+	return `{"X-CSRF-Token": "` + csrfToken(ctx) + `"}`
 }
 
 var _ = templruntime.GeneratedTemplate

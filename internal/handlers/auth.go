@@ -23,9 +23,7 @@ func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form data", http.StatusBadRequest)
+	if !h.parseForm(w, r) {
 		return
 	}
 
