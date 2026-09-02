@@ -1,5 +1,7 @@
 package templates
 
+import "github.com/Kurai1979/flashcard/internal/db"
+
 // FlashcardForm backs both the create and the edit form. An empty ID means a
 // new card; a set one means the form edits that card.
 type FlashcardForm struct {
@@ -52,4 +54,68 @@ templ SaveFlashcard(form FlashcardForm) {
 		</label>
 		<button class="btn-primary mt-2 w-full" type="submit">{ form.submitLabel() }</button>
 	</form>
+}
+
+// FlashcardCreated is the response to a successful create: a cleared form ready
+// for the next card, plus the refreshed list swapped in out-of-band. The second
+// fragment is what makes the new card appear — the form's own hx-target covers
+// only the form, so without it the list would stay stale until a reload.
+templ FlashcardCreated(cards []db.ListFlashcardsRow) {
+	@SaveFlashcard(FlashcardForm{Notice: "Card added."})
+	@FlashcardListOOB(cards)
+}
+
+// FlashcardList renders the caller's cards, newest first.
+templ FlashcardList(cards []db.ListFlashcardsRow) {
+	@flashcardList(cards, false)
+}
+
+// FlashcardListOOB is the same list marked for an out-of-band swap, letting a
+// response aimed at some other element refresh the list as a side effect.
+templ FlashcardListOOB(cards []db.ListFlashcardsRow) {
+	@flashcardList(cards, true)
+}
+
+templ flashcardList(cards []db.ListFlashcardsRow, oob bool) {
+	<ul id="flashcard-list" class="mt-4 flex flex-col gap-2" { oobAttrs(oob)... }>
+		if len(cards) == 0 {
+			<li class="text-sm text-gray-500 dark:text-gray-400">No cards yet.</li>
+		}
+		for _, card := range cards {
+			@FlashcardListItem(card)
+		}
+	</ul>
+}
+
+templ FlashcardListItem(card db.ListFlashcardsRow) {
+	<li id={ flashcardRowID(card) } class="flex items-start justify-between gap-4 rounded-md border border-gray-200 px-4 py-3 dark:border-gray-800">
+		<div class="min-w-0">
+			<p class="text-sm font-medium text-gray-900 dark:text-white">{ card.Front }</p>
+			<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{ card.Back }</p>
+			if card.Example.Valid && card.Example.String != "" {
+				<p class="mt-1 text-sm italic text-gray-400 dark:text-gray-500">{ card.Example.String }</p>
+			}
+		</div>
+		// The empty response body swaps over this row's <li>, so a deleted card
+		// disappears without reloading the list.
+		<button
+			type="button"
+			hx-delete={ "/flashcard/" + card.ID.String() }
+			hx-headers={ csrfHeaders(ctx) }
+			hx-target={ "#" + flashcardRowID(card) }
+			hx-swap="outerHTML"
+			hx-confirm={ "Delete card \"" + card.Front + "\"?" }
+			title="Delete card"
+			aria-label={ "Delete card " + card.Front }
+			class="shrink-0 rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+		>
+			@trashIcon()
+		</button>
+	</li>
+}
+
+// flashcardRowID is the DOM id of a card's row, shared by the row and the
+// hx-target of its delete button.
+func flashcardRowID(card db.ListFlashcardsRow) string {
+	return "card-" + card.ID.String()
 }

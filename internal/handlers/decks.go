@@ -42,7 +42,15 @@ func (h *Handler) AddDeck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.render(w, r, http.StatusCreated, templates.SaveDeck(templates.Deckform{Notice: "deck created"}))
+	// Re-read the list so the response can carry it back out-of-band; otherwise
+	// the new deck wouldn't show until a reload.
+	decks, err := h.Queries.ListDecks(r.Context(), user.ID)
+	if err != nil {
+		h.serverError(w, r, "list decks", err)
+		return
+	}
+
+	h.render(w, r, http.StatusCreated, templates.DeckCreated(decks))
 }
 
 // GetDecks renders the deck/card authoring page together with the caller's own
@@ -59,7 +67,13 @@ func (h *Handler) GetDecks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.render(w, r, http.StatusOK, templates.DecksPage(user.Email, decks))
+	cards, err := h.listFlashcards(r, user.ID)
+	if err != nil {
+		h.serverError(w, r, "list flashcards", err)
+		return
+	}
+
+	h.render(w, r, http.StatusOK, templates.DecksPage(user.Email, decks, cards))
 }
 
 // RemoveDeck deletes one of the caller's decks. The delete button targets the
@@ -76,8 +90,6 @@ func (h *Handler) RemoveDeck(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
-	// TODO: delete the deck for id + user.ID and 404 when nothing was removed.
 
 	c, err := h.Queries.DeleteDeck(r.Context(), db.DeleteDeckParams{
 		ID:     id,

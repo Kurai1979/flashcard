@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
+	"uuid"
 
 	"github.com/Kurai1979/flashcard/internal/auth"
 	"github.com/Kurai1979/flashcard/internal/db"
 	"github.com/Kurai1979/flashcard/internal/templates"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )

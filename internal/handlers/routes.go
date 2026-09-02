@@ -51,6 +51,7 @@ func (h *Handler) Routes(sessionManager *scs.SessionManager, secureCookies bool)
 			r.Delete("/decks/{id}", h.RemoveDeck)
 			r.Post("/flashcard", h.CreateFlashcard)
 			r.Post("/flashcard/{id}", h.UpdateFlashcard)
+			r.Delete("/flashcard/{id}", h.RemoveFlashcard)
 		})
 	})
 

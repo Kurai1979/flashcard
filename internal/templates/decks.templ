@@ -48,8 +48,9 @@ templ SaveDeck(form Deckform) {
 }
 
 // DecksPage is the deck/card authoring area. The card form it contains posts
-// to /flashcard on its own; decks is the caller's own deck list, newest first.
-templ DecksPage(email string, decks []db.Deck) {
+// to /flashcard on its own; decks and cards are the caller's own, newest first.
+// cards is the first page only — see ListFlashcards for the cursor.
+templ DecksPage(email string, decks []db.Deck, cards []db.ListFlashcardsRow) {
 	@AppShell("Decks", email) {
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Decks</h1>
@@ -72,13 +73,38 @@ templ DecksPage(email string, decks []db.Deck) {
 			<h2 class="text-sm font-semibold text-gray-900 dark:text-white">Your decks</h2>
 			@DeckList(decks)
 		</section>
+		<section class="mt-6">
+			<h2 class="text-sm font-semibold text-gray-900 dark:text-white">Your cards</h2>
+			@FlashcardList(cards)
+		</section>
 	}
 }
 
-// DeckList renders the whole list. A handler that creates a deck can render a
-// single DeckListItem and swap it in with hx-swap="beforeend" on #deck-list.
+// DeckCreated is the response to a successful create: a cleared form ready for
+// the next deck, plus the refreshed list swapped in out-of-band. The second
+// fragment is what makes the new deck appear — the form's own hx-target covers
+// only the form, so without it the list would stay stale until a reload.
+templ DeckCreated(decks []db.Deck) {
+	@SaveDeck(Deckform{Notice: "deck created"})
+	@DeckListOOB(decks)
+}
+
+// DeckList renders the caller's decks, newest first.
 templ DeckList(decks []db.Deck) {
-	<ul id="deck-list" class="mt-4 flex flex-col gap-2">
+	@deckList(decks, false)
+}
+
+// DeckListOOB is the same list marked for an out-of-band swap, letting a
+// response aimed at some other element refresh the list as a side effect.
+templ DeckListOOB(decks []db.Deck) {
+	@deckList(decks, true)
+}
+
+// The whole list is re-rendered rather than appending one row: it keeps the
+// "No decks yet." placeholder correct without a second swap to remove it, and
+// the list is small enough that the extra markup costs nothing.
+templ deckList(decks []db.Deck, oob bool) {
+	<ul id="deck-list" class="mt-4 flex flex-col gap-2" { oobAttrs(oob)... }>
 		if len(decks) == 0 {
 			<li class="text-sm text-gray-500 dark:text-gray-400">No decks yet.</li>
 		}

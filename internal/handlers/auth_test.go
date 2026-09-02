@@ -9,11 +9,11 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"uuid"
 
 	"github.com/Kurai1979/flashcard/internal/auth"
 	"github.com/Kurai1979/flashcard/internal/db"
 	"github.com/alexedwards/scs/v2"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -23,6 +23,11 @@ import (
 type stubQuerier struct {
 	getUserByEmail  func(ctx context.Context, email string) (db.User, error)
 	updateLastLogin func(ctx context.Context, id pgtype.UUID) error
+	createDeck      func(ctx context.Context, arg db.CreateDeckParams) (db.Deck, error)
+	listDecks       func(ctx context.Context, id pgtype.UUID) ([]db.Deck, error)
+	createFlashcard func(ctx context.Context, arg db.CreateFlashcardParams) (db.Flashcard, error)
+	listFlashcards  func(ctx context.Context, arg db.ListFlashcardsParams) ([]db.ListFlashcardsRow, error)
+	deleteFlashcard func(ctx context.Context, arg db.DeleteFlashcardParams) (int64, error)
 }
 
 func (s *stubQuerier) GetUserByEmail(ctx context.Context, email string) (db.User, error) {
@@ -46,14 +51,20 @@ func (s *stubQuerier) HealthCheck(context.Context) (int32, error) {
 	panic("HealthCheck not implemented")
 }
 
-func (s *stubQuerier) CreateDeck(context.Context, db.CreateDeckParams) (db.Deck, error) {
-	panic("CreateDeck not implemented")
+func (s *stubQuerier) CreateDeck(ctx context.Context, arg db.CreateDeckParams) (db.Deck, error) {
+	if s.createDeck == nil {
+		panic("CreateDeck not implemented")
+	}
+	return s.createDeck(ctx, arg)
 }
 func (s *stubQuerier) GetDeck(context.Context, db.GetDeckParams) (db.Deck, error) {
 	panic("GetDeck not implemented")
 }
-func (s *stubQuerier) ListDecks(context.Context, pgtype.UUID) ([]db.Deck, error) {
-	panic("ListDecks not implemented")
+func (s *stubQuerier) ListDecks(ctx context.Context, id pgtype.UUID) ([]db.Deck, error) {
+	if s.listDecks == nil {
+		panic("ListDecks not implemented")
+	}
+	return s.listDecks(ctx, id)
 }
 func (s *stubQuerier) UpdateDeck(context.Context, db.UpdateDeckParams) (db.Deck, error) {
 	panic("UpdateDeck not implemented")
@@ -68,17 +79,26 @@ func (s *stubQuerier) RemoveFlashcardFromDeck(context.Context, db.RemoveFlashcar
 	panic("RemoveFlashcardFromDeck not implemented")
 }
 
-func (s *stubQuerier) CreateFlashcard(context.Context, db.CreateFlashcardParams) (db.Flashcard, error) {
-	panic("CreateFlashcard not implemented")
+func (s *stubQuerier) CreateFlashcard(ctx context.Context, arg db.CreateFlashcardParams) (db.Flashcard, error) {
+	if s.createFlashcard == nil {
+		panic("CreateFlashcard not implemented")
+	}
+	return s.createFlashcard(ctx, arg)
 }
 func (s *stubQuerier) UpdateFlashcard(context.Context, db.UpdateFlashcardParams) (db.Flashcard, error) {
 	panic("UpdateFlashcard not implemented")
 }
-func (s *stubQuerier) DeleteFlashcard(context.Context, db.DeleteFlashcardParams) (int64, error) {
-	panic("DeleteFlashcard not implemented")
+func (s *stubQuerier) DeleteFlashcard(ctx context.Context, arg db.DeleteFlashcardParams) (int64, error) {
+	if s.deleteFlashcard == nil {
+		panic("DeleteFlashcard not implemented")
+	}
+	return s.deleteFlashcard(ctx, arg)
 }
-func (s *stubQuerier) ListFlashcards(context.Context, db.ListFlashcardsParams) ([]db.ListFlashcardsRow, error) {
-	panic("ListFlashcards not implemented")
+func (s *stubQuerier) ListFlashcards(ctx context.Context, arg db.ListFlashcardsParams) ([]db.ListFlashcardsRow, error) {
+	if s.listFlashcards == nil {
+		panic("ListFlashcards not implemented")
+	}
+	return s.listFlashcards(ctx, arg)
 }
 
 func newTestUser(t *testing.T, email, password string, active bool) db.User {
